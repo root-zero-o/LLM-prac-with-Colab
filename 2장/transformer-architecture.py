@@ -134,3 +134,30 @@ n_head = 4
 mh_attention = MultiheadAttention(embedding_dim, embedding_dim, n_head)
 after_attention_embeddings = mh_attention(input_embeddings, input_embeddings, input_embeddings)
 after_attention_embeddings.shape
+
+# 5) 층 정규화
+# - 정규화 : 딥러닝 모델에서 입력이 일정한 분포를 갖도록 만들어 학습이 안정적이고 빨라질 수 있도록 하는 기법
+norm = nn.LayerNorm(embedding_dim)
+norm_x = norm(input_embeddings) # 정규화된 임베딩
+norm_x.shape
+
+norm_x.mean(dim=-1).data, norm_x.std(dim=-1).data # 실제로 평균과 표준편차 확인하기
+
+# 6) 피드 포워드 층
+# 데이터의 특징을 학습하는 완전 연결 층
+# 입력 텍스트 전체를 이해하는 역할
+class PreLayerNormFeedForward(nn.Module):
+  def __init__(self, d_model, dim_feedforward, dropout):
+    super().__init__()
+    self.linear1 = nn.Linear(d_model, dim_feedforward) # 선형 층 1
+    self.linear2 = nn.Linear(dim_feedforward, d_model) # 선형 층 2
+    self.dropout1 = nn.Dropout(dropout) # 드롭아웃 층 1
+    self.dropout2 = nn.Dropout(dropout) # 드롭아웃 층 2
+    self.activation = nn.GELU() # 활성 함수
+    self.norm = nn.LayerNorm(d_model)
+  
+  def forward(self, src):
+    x = self.norm(src)
+    x = x + self.linear2(self.dropout1(self.activation(self.linear1(x))))
+    x = self.dropout2(x)
+    return x
