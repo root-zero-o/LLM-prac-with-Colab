@@ -55,3 +55,4 @@ print(tokenizer.decode(tokenized['input_ids']))
 
 print(tokenizer.decode(tokenized['input_ids'], skip_special_tokens=True))
 # 공부 그만하고 싶은데
+
